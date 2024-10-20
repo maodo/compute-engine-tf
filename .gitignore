@@ -1,6 +1,7 @@
 keys/
 .terraform.lock.hcl
 .terraform/
+.vscode/
 
 # Local .terraform directories
 **/.terraform/*

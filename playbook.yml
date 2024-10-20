@@ -1,0 +1,21 @@
+---
+- hosts: webserver
+  become: yes
+  
+  tasks:
+   - name: Update apt packages index and install packages
+     apt:
+        update_cache: yes
+        name: "{{ item   }}"
+     with_items: 
+        - curl
+        - software-properties-common
+        - nginx
+   - name: Start nginx
+     service:
+        name: nginx
+        state: started
+   - name: Install Nodejs
+     shell: sudo apt-get install -y nodejs
+   - name: Install npm
+     shell: sudo apt-get install -y npm
