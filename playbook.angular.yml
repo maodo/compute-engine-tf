@@ -60,6 +60,14 @@
         dest: "{{ nginx_config_dir }}"
         remote_src: true
 
+    - name: Configure the nginx root to point to our custom root
+      lineinfile:
+        path: /etc/nginx/nginx.conf
+        regexp: 'include \/etc\/nginx\/sites-enabled\/\*;$'
+        line: '# include /etc/nginx/sites-enabled/*;'
+        state: present
+        backrefs: yes
+        
     - name: Restart Nginx
       service:
         name: nginx
