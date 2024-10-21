@@ -1,0 +1,66 @@
+---
+- name: Angular deployment 
+  hosts: webserver
+  become: true
+  vars:
+    project_dir: "/var/www/angular-app"
+    github_repo: "https://github.com/maodo/angular-app.git"
+    nginx_config_dir: "/etc/nginx/conf.d"
+  tasks:
+    - name: Update apt packages index and install packages
+      apt:
+        update_cache: yes
+        name: "{{ item  }}"
+      with_items:
+        - curl
+        - software-properties-common
+        
+    - name: Install Node.js 
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_23.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+
+    - name: Install Git
+      apt:
+        name: git
+        state: present
+
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Install Angular CLI globally
+      npm:
+        name: "@angular/cli"
+        global: true
+
+    - name: Clone the angular app from Github
+      git:
+        repo: "{{ github_repo   }}"
+        dest: "{{ project_dir   }}"
+        version: main
+        force: yes
+
+    - name: Build the angular app
+      shell: cd "{{ project_dir }}" && npm install && ng build --configuration production
+
+    # - name : Copy the built angular app to the Nginx server
+    #   shell : cp -r "{{ project_dir }}/dist/angular-app/browser/*" /usr/share/nginx/html/
+    - name: Copy the built angular app to the Nginx server
+      copy:
+        src: "{{ project_dir }}/dist/angular-app/browser/"
+        dest: /usr/share/nginx/html
+        remote_src: true
+        force: yes
+
+    - name: Copy the Nginx configuration file
+      copy:
+        src: "{{ project_dir }}/default.conf"
+        dest: "{{ nginx_config_dir }}"
+        remote_src: true
+
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
